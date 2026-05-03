@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LifeFlow</title>
+  <style>
+
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #f5f5f5;
+    }
+
+    .header {
+      background: #534AB7;
+      padding: 24px 20px 20px;
+      color: white;
+    }
+
+    .header h1 {
+      margin: 0 0 4px;
+      font-size: 22px;
+    }
+
+    .header p {
+      margin: 0;
+      font-size: 13px;
+      color: #AFA9EC;
+    }
+
+    .stats {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .stat {
+      background: rgba(255,255,255,0.15);
+      border-radius: 10px;
+      padding: 10px 16px;
+      text-align: center;
+    }
+
+    .stat-num {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: #AFA9EC;
+    }
+
+    .content {
+      padding: 16px;
+    }
+
+    .section-title {
+      font-size: 12px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 10px;
+    }
+
+    .task {
+      background: white;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+    }
+
+    .task:hover {
+      background: #f9f9f9;
+    }
+
+    .circle {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid #ccc;
+      flex-shrink: 0;
+    }
+
+    .circle.done {
+      background: #1D9E75;
+      border-color: #1D9E75;
+    }
+
+    .task-text.done {
+      color: #aaa;
+      text-decoration: line-through;
+    }
+
+    .tag {
+      margin-left: auto;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .tag-health { background: #FAECE7; color: #993C1D; }
+    .tag-work   { background: #E6F1FB; color: #185FA5; }
+    .tag-home   { background: #EAF3DE; color: #3B6D11; }
+
+    .add-box {
+      background: white;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .add-box input {
+      flex: 1;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .add-box input:focus {
+      border-color: #534AB7;
+    }
+
+    .add-box select {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 10px 8px;
+      font-size: 14px;
+      outline: none;
+      color: #555;
+    }
+
+    .add-box button {
+      background: #534AB7;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .add-box button:hover {
+      background: #443a9e;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Good morning!</h1>
+    <p>Stay on top of your day</p>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-num">7</div>
+        <div class="stat-label">day streak</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="done-count">0/0</div>
+        <div class="stat-label">tasks done</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="add-box">
+      <input type="text" id="task-input" placeholder="Add a new task..." />
+      <select id="tag-select">
+        <option value="work">work</option>
+        <option value="home">home</option>
+        <option value="health">health</option>
+      </select>
+      <button onclick="addTask()">Add</button>
+    </div>
+
+    <div class="section-title">Today</div>
+    <div id="task-list"></div>
+
+  </div>
+
+  <script>
+
+    var tasks = JSON.parse(localStorage.getItem('tasks')) || []
+
+    function saveTasks() {
+      localStorage.setItem('tasks', JSON.stringify(tasks))
+    }
+
+    function renderTasks() {
+      var list = document.getElementById('task-list')
+      list.innerHTML = ''
+
+      tasks.forEach(function(task, index) {
+        var div = document.createElement('div')
+        div.className = 'task'
+        div.onclick = function() { toggleTask(index) }
+        div.innerHTML = '<div class="circle ' + (task.done ? 'done' : '') + '"></div>' +
+                        '<span class="task-text ' + (task.done ? 'done' : '') + '">' + task.text + '</span>' +
+                        '<span class="tag tag-' + task.tag + '">' + task.tag + '</span>'
+        list.appendChild(div)
+      })
+
+      updateCount()
+    }
+
+    function addTask() {
+      var input = document.getElementById('task-input')
+      var select = document.getElementById('tag-select')
+
+      var text = input.value.trim()
+      if (text === '') return
+
+      tasks.push({ text: text, tag: select.value, done: false })
+      saveTasks()
+      renderTasks()
+
+      input.value = ''
+    }
+
+    function toggleTask(index) {
+      tasks[index].done = !tasks[index].done
+      saveTasks()
+      renderTasks()
+    }
+
+    function updateCount() {
+      var total = tasks.length
+      var done = tasks.filter(function(t) { return t.done }).length
+      document.getElementById('done-count').textContent = done + '/' + total
+    }
+
+    document.getElementById('task-input').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') addTask()
+    })
+
+    renderTasks()
+
+  </script>
+
+</body>
+</html>
